@@ -1,10 +1,10 @@
-/*gcc `pkg-config --cflags --libs gtk+-2.0` GTK_Opdracht.c -o GTK_Opdracht -lPJ_RPI*/
-
+/*gcc `pkg-config --cflags --libs gtk+-2.0` GTK_Opdracht.c -o GTK_Opdracht -lwiringPi*/
+//basic
 #include <gtk/gtk.h>
 
 int count = 0;
-int GPIO17_State;
-int GPIO27_State;
+int GPIO12_State;
+int GPIO16_State;
 
 void end_program (GtkWidget *wid, gpointer ptr)
 {
@@ -25,9 +25,9 @@ int main (int argc, char *argv[])
     gtk_init (&argc, &argv);
     GtkWidget *win = gtk_window_new (GTK_WINDOW_TOPLEVEL); //Window
     GtkWidget *btn = gtk_button_new_with_label ("Exit"); //button
-    GtkWidget *lbl = gtk_label_new ("<b>My Assignment</b>");//label 
-    GtkWidget *lbl2 = gtk_label_new ("State GPIO17:");//label 
-    GtkWidget *lbl3 = gtk_label_new ("State GPIO27:");//label 
+    GtkWidget *lbl = gtk_label_new ("My Assignment");//label 
+    GtkWidget *lbl2 = gtk_label_new ("State GPIO12:");//label 
+    GtkWidget *lbl3 = gtk_label_new ("State GPIO16:");//label 
     GtkWidget *tbl = gtk_table_new (11, 11, TRUE); //tabel 0-11
     GtkWidget *btn2 = gtk_button_new_with_label ("Count button"); //Count button
     
