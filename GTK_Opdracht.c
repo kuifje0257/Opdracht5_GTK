@@ -1,5 +1,5 @@
-/*gcc `pkg-config --cflags --libs gtk+-2.0` GTK_Opdracht.c -o GTK_Opdracht -lwiringPi*/
-//WiringPi toevoegen en labels opmaken
+/*gcc `pkg-config --cflags --libs gtk+-2.0` GTK_Opdracht3.c -o GTK_Opdracht3 -lwiringPi*/
+//Combobox toevoegen
 #include <gtk/gtk.h>
 #include <wiringPi.h>
 #include <stdio.h>
@@ -72,6 +72,22 @@ void GPIO11_State (GtkWidget *wid, gpointer ptr)
     }
 }
 
+void combo_changed (GtkWidget *wid, gpointer ptr)
+{   
+    int sel = gtk_combo_box_get_active (GTK_COMBO_BOX (wid));
+    char *selected = gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (wid));
+
+    printf ("The value of the combo is %s\n", selected);
+    if(sel ==1){
+        digitalWrite(ledPin1, LOW);
+        digitalWrite(ledPin2, HIGH);
+    }
+    if(sel ==0){
+        digitalWrite(ledPin2, LOW);
+        digitalWrite(ledPin1, HIGH);
+    }
+}
+
 int main (int argc, char *argv[])
 {
     // Setup stuff:
@@ -90,12 +106,18 @@ int main (int argc, char *argv[])
     GtkWidget *lbl2 = gtk_label_new ("State GPIO12: 0");//label LED1
     GtkWidget *lbl3 = gtk_label_new ("State GPIO16: 0");//label LED2
     GtkWidget *lbl4 = gtk_label_new ("State GPIO11: 0");//label Button
+    GtkWidget *lbl5 = gtk_label_new ("Combobox: ");//label Combobox
     GtkWidget *tbl = gtk_table_new (11, 11, TRUE); //tabel 0-11
     GtkWidget *btn2 = gtk_button_new_with_label ("Change GPIO12"); //LED button
     GtkWidget *btn3 = gtk_button_new_with_label ("Change GPIO16"); //LED button
     GtkWidget *btn4 = gtk_button_new_with_label ("Check State of button"); //ButtonState button
     
     //ComboBox (uitbreiding)
+    GtkWidget *comb = gtk_combo_box_text_new (); //Combobox
+    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (comb), "GPIO 12");
+    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (comb), "GPIO 16");
+    gtk_combo_box_set_active (GTK_COMBO_BOX (comb), 0);
+    g_signal_connect (comb, "changed", G_CALLBACK (combo_changed), NULL);
     
     //events
     g_signal_connect (btn, "clicked", G_CALLBACK (end_program),NULL);
@@ -115,8 +137,11 @@ int main (int argc, char *argv[])
     gtk_table_attach_defaults (GTK_TABLE (tbl), lbl2, 0, 4, 3, 4);
     gtk_table_attach_defaults (GTK_TABLE (tbl), lbl3, 7, 11, 3, 4);
     gtk_table_attach_defaults (GTK_TABLE (tbl), lbl4, 4, 7, 5, 6);
+    gtk_table_attach_defaults (GTK_TABLE (tbl), lbl5, 0, 2, 7, 8);
     //Exit button
     gtk_table_attach_defaults (GTK_TABLE (tbl), btn, 10, 11, 10, 11);
+    //Combobox
+    gtk_table_attach_defaults (GTK_TABLE (tbl), comb, 2, 4, 7, 8);
 
     
     //box toevoegen aan window
