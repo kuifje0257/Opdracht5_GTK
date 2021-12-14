@@ -1,9 +1,10 @@
-/*gcc `pkg-config --cflags --libs gtk+-2.0` GTK_Opdracht3.c -o GTK_Opdracht3 -lwiringPi*/
-//Combobox toevoegen
+/*gcc `pkg-config --cflags --libs gtk+-2.0` GTK_Opdracht.c -o GTK_Opdracht -lwiringPi*/
+//Timer toevoegen
 #include <gtk/gtk.h>
 #include <wiringPi.h>
 #include <stdio.h>
 #include <string.h>
+
 //LED1 => pin 12
 //LED1 => pin 16
 //Button => pin 11
@@ -15,6 +16,7 @@ int GPIO16_State=0;
 const int ledPin1 = 18; ///wPi 18= pin 12
 const int ledPin2 = 23; //wPi 23= pin16
 const int btnPin = 0; //wPi 0= pin 11
+GtkWidget *txt;
 
 void end_program (GtkWidget *wid, gpointer ptr)
 {
@@ -60,12 +62,14 @@ void GPIO16_CHANGED (GtkWidget *wid, gpointer ptr)
 void GPIO11_State (GtkWidget *wid, gpointer ptr)
 {
     char buffer[30];
-    if (digitalRead(btnPin)) // Button is released if this returns 1
+    int btn = digitalRead(btnPin);
+    printf("%d",btn);
+    if (digitalRead(btnPin)==1) // Button is released if this returns 1
     {
         sprintf (buffer, "State GPIO11: 1");
         gtk_label_set_text (GTK_LABEL (ptr), buffer);
     }
-    else // If digitalRead returns 0, button is pressed
+    if (digitalRead(btnPin)==0) // If digitalRead returns 0, button is released
     {
         sprintf (buffer, "State GPIO11: 0");
         gtk_label_set_text (GTK_LABEL (ptr), buffer);
@@ -88,6 +92,27 @@ void combo_changed (GtkWidget *wid, gpointer ptr)
     }
 }
 
+void ToggleLeds(GtkWidget *wid, gpointer ptr){
+    const char *text = gtk_entry_get_text (GTK_ENTRY (txt));
+    int seconds = atoi(text);
+
+    for(int i = 0;i<20;i++)
+    {
+        if(i%2==0){
+            digitalWrite(ledPin1, LOW);
+            digitalWrite(ledPin2, HIGH);
+        }
+        if(i%2==1){
+            digitalWrite(ledPin2, LOW);
+            digitalWrite(ledPin1, HIGH);
+        }
+        delay(seconds);
+    }
+    delay(500);
+    digitalWrite(ledPin1, LOW);
+    digitalWrite(ledPin2, LOW);
+
+}
 int main (int argc, char *argv[])
 {
     // Setup stuff:
@@ -107,42 +132,53 @@ int main (int argc, char *argv[])
     GtkWidget *lbl3 = gtk_label_new ("State GPIO16: 0");//label LED2
     GtkWidget *lbl4 = gtk_label_new ("State GPIO11: 0");//label Button
     GtkWidget *lbl5 = gtk_label_new ("Combobox: ");//label Combobox
+    GtkWidget *lbl6 = gtk_label_new ("aantal milleseconden: ");//label Combobox
     GtkWidget *tbl = gtk_table_new (11, 11, TRUE); //tabel 0-11
     GtkWidget *btn2 = gtk_button_new_with_label ("Change GPIO12"); //LED button
     GtkWidget *btn3 = gtk_button_new_with_label ("Change GPIO16"); //LED button
     GtkWidget *btn4 = gtk_button_new_with_label ("Check State of button"); //ButtonState button
-    
+    GtkWidget *btn5 = gtk_button_new_with_label ("Toggle Leds"); //LED button
+
     //ComboBox (uitbreiding)
     GtkWidget *comb = gtk_combo_box_text_new (); //Combobox
     gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (comb), "GPIO 12");
     gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (comb), "GPIO 16");
     gtk_combo_box_set_active (GTK_COMBO_BOX (comb), 0);
     g_signal_connect (comb, "changed", G_CALLBACK (combo_changed), NULL);
+
+    //Timer (uitbreiding)
+    txt = gtk_entry_new ();
+    GtkObject *adj = gtk_adjustment_new (500, 500, 5000, 500, 0, 0);
+    txt = gtk_spin_button_new (GTK_ADJUSTMENT (adj), 0, 0);
     
     //events
     g_signal_connect (btn, "clicked", G_CALLBACK (end_program),NULL);
     g_signal_connect (btn2, "clicked", G_CALLBACK (GPIO12_CHANGED), lbl2);
     g_signal_connect (btn3, "clicked", G_CALLBACK (GPIO16_CHANGED), lbl3);
     g_signal_connect (btn4, "clicked", G_CALLBACK (GPIO11_State), lbl4);
+    g_signal_connect (btn5, "clicked", G_CALLBACK (ToggleLeds), NULL);
     g_signal_connect (win, "delete_event", G_CALLBACK (end_program),NULL);
 
     //widgets toevoegen aan tabel
     //Top Label
     gtk_table_attach_defaults (GTK_TABLE (tbl), lbl, 4, 7, 0, 1); // 1ste nummer < 2de nummer, 3de nummer < 4de nummer (eerste 2 zijn de breedte, laatste 2 zijn de hoogte)
-    //GPIO Buttons
+    //Buttons
     gtk_table_attach_defaults (GTK_TABLE (tbl), btn2, 0, 4, 1, 3); 
     gtk_table_attach_defaults (GTK_TABLE (tbl), btn3, 7, 11, 1, 3);
     gtk_table_attach_defaults (GTK_TABLE (tbl), btn4, 0, 4, 5, 6);
-    //GPIO Labels
+    gtk_table_attach_defaults (GTK_TABLE (tbl), btn5, 4, 6, 9, 10);
+    //Labels
     gtk_table_attach_defaults (GTK_TABLE (tbl), lbl2, 0, 4, 3, 4);
     gtk_table_attach_defaults (GTK_TABLE (tbl), lbl3, 7, 11, 3, 4);
     gtk_table_attach_defaults (GTK_TABLE (tbl), lbl4, 4, 7, 5, 6);
     gtk_table_attach_defaults (GTK_TABLE (tbl), lbl5, 0, 2, 7, 8);
-    //Exit button
-    gtk_table_attach_defaults (GTK_TABLE (tbl), btn, 10, 11, 10, 11);
+    gtk_table_attach_defaults (GTK_TABLE (tbl), lbl6, 0, 2, 9, 10);
     //Combobox
     gtk_table_attach_defaults (GTK_TABLE (tbl), comb, 2, 4, 7, 8);
-
+    //Text Box
+    gtk_table_attach_defaults (GTK_TABLE (tbl), txt, 2, 4, 9, 10);
+    //Exit button
+    gtk_table_attach_defaults (GTK_TABLE (tbl), btn, 10, 11, 10, 11);
     
     //box toevoegen aan window
     gtk_container_add (GTK_CONTAINER (win), tbl);
